@@ -1,0 +1,39 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  cpp-x86_64:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake libzmq3-dev
+          sudo curl -fsSL -o /usr/local/include/zmq.hpp https://raw.githubusercontent.com/zeromq/cppzmq/v4.10.0/zmq.hpp
+      - name: Configure
+        run: cmake -S . -B build
+      - name: Build
+        run: cmake --build build -j "$(nproc)"
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  python:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install test dependencies
+        run: python -m pip install numpy==1.25.0 scipy==1.11.4 pymetis==2023.1.1 pyzmq==25.1.2
+      - name: Unit tests
+        run: python -m unittest discover -s tools -t . -v

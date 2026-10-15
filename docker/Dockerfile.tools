@@ -1,0 +1,16 @@
+# Data preparation tools: numpy, scipy, pymetis, diskannpy.
+# diskannpy only ships x86-64 wheels:
+#   docker build --platform linux/amd64 -f docker/Dockerfile.tools -t tide-ann-tools:latest .
+
+FROM ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+RUN python3 -m pip install --no-cache-dir \
+        numpy==1.25.0 scipy==1.11.4 pymetis==2023.1.1 diskannpy==0.7.0 \
+    && python3 -c "import numpy, scipy, pymetis, diskannpy"
+
+ENV PYTHONDONTWRITEBYTECODE=1
+WORKDIR /w
