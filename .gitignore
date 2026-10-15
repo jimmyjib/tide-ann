@@ -1,0 +1,23 @@
+# Build trees
+build/
+cmake-build-*/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# Local data and demo output (keep datasets out of the repository)
+data/
+*.npy
+*.bin
+*.fvecs
+*.ivecs
+*.log
+
+# Editors and OS files
+.idea/
+.vscode/
+*.swp
+.DS_Store

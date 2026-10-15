@@ -1,0 +1,31 @@
+# Data preparation tools: numpy, scipy, pymetis (METIS partitions) and diskannpy (Vamana graph).
+#
+#   docker build --platform linux/amd64 -f docker/Dockerfile.tools -t tide-ann-tools:latest .
+#
+# linux/amd64 only: diskannpy 0.7.0 publishes x86-64 wheels only (and requires numpy 1.25.0 exactly).
+# Pass --platform linux/amd64 on every host: the image is then recorded as linux/amd64, which
+# `docker run --platform linux/amd64` (examples/demo.py) requires; any other target platform is refused
+# below. The check reads TARGETPLATFORM, which only BuildKit sets (the legacy builder leaves it empty
+# and the build is refused). On an arm64 host Docker Desktop builds and runs this image through its
+# x86-64 emulation; Docker Engine on Linux arm64 needs amd64 emulation (QEMU binfmt) registered first.
+# The repository is mounted at run time (examples/demo.py mounts it at /repo and sets PYTHONPATH), so
+# the image holds no source.
+
+FROM ubuntu:22.04@sha256:962f6cadeae0ea6284001009daa4cc9a8c37e75d1f5191cf0eb83fe565b63dd7
+
+ARG TARGETPLATFORM
+RUN if [ "$TARGETPLATFORM" != "linux/amd64" ]; then \
+        echo "docker/Dockerfile.tools: build with --platform linux/amd64 (target is '$TARGETPLATFORM')" >&2; \
+        exit 1; \
+    fi
+
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+RUN python3 -m pip install --no-cache-dir \
+        numpy==1.25.0 scipy==1.11.4 pymetis==2023.1.1 diskannpy==0.7.0 \
+    && python3 -c "import numpy, scipy, pymetis, diskannpy; print('tools ok', numpy.__version__)"
+
+ENV PYTHONDONTWRITEBYTECODE=1
+WORKDIR /w

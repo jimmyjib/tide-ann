@@ -1,0 +1,60 @@
+Third-party notices
+===================
+
+Product quantization (src/tide/include/pq.h, src/tide/build_pq.cpp)
+--------------------------------------------------------------------------
+
+The product quantization module was ported algorithmically from the DiskANN
+reference implementation (src/pq.cpp: generate_pq_pivots,
+generate_pq_data_from_pivots_simplified, FixedChunkPQTable::
+populate_chunk_distances, l2_distance), https://github.com/microsoft/DiskANN,
+which is distributed under the MIT License. Its LICENSE file (branch
+cpp_main, which holds that C++ implementation) reads, verbatim:
+
+    DiskANN
+
+    MIT License
+
+    Copyright (c) Microsoft Corporation.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE
+
+Other source files
+------------------
+
+All other source code in this repository was written by the copyright holder
+named in LICENSE. No other third-party source code is included.
+
+Dependencies (not included)
+---------------------------
+
+The following are used but not distributed with this repository; each is
+under its own license. The CMake build downloads nothing: it locates libzmq
+and zmq.hpp, which must already be installed for a local build (it stops with
+an install hint when either is missing), and uses OpenMP when the compiler
+provides it. The Docker files and the CI workflow install the dependencies
+(apt, pip, and the checksum-pinned cppzmq header); the Python packages for
+the host-side demo and the tools are installed by the user:
+
+- ZeroMQ: libzmq and the C++ header zmq.hpp (cppzmq), used by the servers
+  and the coordinator;
+- the C++ standard library and, when the compiler provides it, OpenMP
+  (tide-build-pq);
+- Python packages for the tools and tests: numpy, scipy, pymetis (METIS
+  graph partitioning), diskannpy (Vamana graph construction) and pyzmq.

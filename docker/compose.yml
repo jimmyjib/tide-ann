@@ -1,0 +1,58 @@
+# Four index servers and the coordinator, P2P search on, serving the data examples/demo.py prepared:
+#
+#   export TIDE_WORK=/tmp/tide-demo     # compose reads it for every subcommand (port and down too)
+#   docker compose -f docker/compose.yml up -d
+#   docker compose -f docker/compose.yml port coordinator 29699     # the admin port on 127.0.0.1
+#   python3 tools/coord_client.py --endpoint tcp://127.0.0.1:<port> recall --queries 1000
+#   docker compose -f docker/compose.yml down
+#
+# Each server mounts only its own data directory (hybrid PQ own-only storage, --pq); the coordinator mounts
+# the whole runtime. The admin port is published on an ephemeral port of 127.0.0.1 only.
+
+name: tide-ann
+
+x-peers: &peers "tcp://server0:28800,tcp://server1:28800,tcp://server2:28800,tcp://server3:28800"
+
+x-server: &server
+  image: ${TIDE_IMAGE:-tide-ann:latest}
+  init: true
+  networks: [tide]
+
+services:
+  server0:
+    <<: *server
+    volumes: ["${TIDE_WORK:?set TIDE_WORK to the demo work directory}/views/server-0:/data:ro"]
+    command: [tide-server, --data-dir, /data, --rank, "0", --num-servers, "4",
+              --port, "28800", --peers, *peers, --threads, "4", --pq]
+  server1:
+    <<: *server
+    volumes: ["${TIDE_WORK:?set TIDE_WORK to the demo work directory}/views/server-1:/data:ro"]
+    command: [tide-server, --data-dir, /data, --rank, "1", --num-servers, "4",
+              --port, "28800", --peers, *peers, --threads, "4", --pq]
+  server2:
+    <<: *server
+    volumes: ["${TIDE_WORK:?set TIDE_WORK to the demo work directory}/views/server-2:/data:ro"]
+    command: [tide-server, --data-dir, /data, --rank, "2", --num-servers, "4",
+              --port, "28800", --peers, *peers, --threads, "4", --pq]
+  server3:
+    <<: *server
+    volumes: ["${TIDE_WORK:?set TIDE_WORK to the demo work directory}/views/server-3:/data:ro"]
+    command: [tide-server, --data-dir, /data, --rank, "3", --num-servers, "4",
+              --port, "28800", --peers, *peers, --threads, "4", --pq]
+  coordinator:
+    image: ${TIDE_IMAGE:-tide-ann:latest}
+    init: true
+    networks: [tide]
+    depends_on: [server0, server1, server2, server3]
+    working_dir: /work
+    volumes:
+      - "${TIDE_WORK:?set TIDE_WORK to the demo work directory}/runtime:/data:ro"
+      - "${TIDE_WORK:?set TIDE_WORK to the demo work directory}/control:/control:ro"
+      - "${TIDE_WORK:?set TIDE_WORK to the demo work directory}/work/coordinator:/work"
+    # The coordinator waits for every server's stats reply (--cluster-check-sec, default 300 s).
+    command: [tide-coordinator, --servers, *peers, --data-dir, /data, --queries, "4096", --p2p,
+              --batch-size, "32", --L, "50", --K, "10", --W, "8"]
+    ports: ["127.0.0.1::29699"]
+
+networks:
+  tide: {}
